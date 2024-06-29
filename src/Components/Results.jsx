@@ -1,32 +1,44 @@
 import React, { useEffect, useState } from "react";
 import "./Results.css";
 import { useNavigate } from "react-router-dom";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./Firebase/Firebase";
 
 export default function Results() {
-  const [votes, setVotes] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const navigate = useNavigate();
 
-
-  const handleLogin = () => {
-    navigate("/")
-  }
-
   useEffect(() => {
-    // Retrieve votes from local storage
-    const storedVotes = JSON.parse(localStorage.getItem("votes")) || [];
-    setVotes(storedVotes);
+    const getData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Votes"));
+        const candidatesData = [];
+
+        querySnapshot.forEach((doc) => {
+          candidatesData.push({ id: doc.id, ...doc.data() });
+        });
+
+        setCandidates(candidatesData);
+      } catch (error) {
+        console.error("Error fetching votes: ", error);
+      }
+    };
+    getData();
   }, []);
 
-  // Function to calculate percentage of votes for a candidate
-  const calculatePercentage = (candidate) => {
-    const totalVotes = votes.length;
-    const candidateVotes = votes.filter((vote) => vote === candidate).length;
-    return totalVotes === 0
-      ? 0
-      : ((candidateVotes / totalVotes) * 100).toFixed(2);
+  const handleLogin = () => {
+    navigate("/");
   };
 
-  // Inline styles for the width of the progress bar
+  const calculateTotalVotes = () => {
+    return candidates.reduce((total, candidate) => total + candidate.voteCount, 0);
+  };
+
+  const calculatePercentage = (voteCount) => {
+    const totalVotes = calculateTotalVotes();
+    return totalVotes === 0 ? 0 : ((voteCount / totalVotes) * 100).toFixed(2);
+  };
+
   const getProgressBarStyles = (percentage) => ({
     width: `${percentage}%`,
   });
@@ -37,72 +49,26 @@ export default function Results() {
         <h2 className="results-heading">These are the Results</h2>
         <div className="results-list">
           <div className="container">
-            <div className="skill-box">
-              <span className="title">Narendra Modi</span>
-
-              <div className="skill-bar">
-                <span
-                  className="skill-per Modi"
-                  style={getProgressBarStyles(
-                    calculatePercentage("Narendra Modi")
-                  )}
-                >
-                  <span className="tooltip">
-                    {calculatePercentage("Narendra Modi")}%
+            {candidates.map((candidate) => (
+              <div className="skill-box" key={candidate.id}>
+                <span className="title">{candidate.candidateName}</span>
+                <div className="skill-bar">
+                  <span
+                    className={`skill-per ${candidate.id}`}
+                    style={getProgressBarStyles(
+                      calculatePercentage(candidate.voteCount)
+                    )}
+                  >
+                    <span className="tooltip">
+                      {candidate.voteCount} votes
+                    </span>
                   </span>
-                </span>
+                </div>
               </div>
-            </div>
-
-            <div className="skill-box">
-              <span className="title">Rahul Gandhi</span>
-
-              <div className="skill-bar">
-                <span
-                  className="skill-per Rahul"
-                  style={getProgressBarStyles(
-                    calculatePercentage("Rahul Gandhi")
-                  )}
-                >
-                  <span className="tooltip">
-                    {calculatePercentage("Rahul Gandhi")}%
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="skill-box">
-              <span className="title">Arvind Kejriwal</span>
-
-              <div className="skill-bar">
-                <span
-                  className="skill-per Kejriwal"
-                  style={getProgressBarStyles(
-                    calculatePercentage("Arvind Kejriwal")
-                  )}
-                >
-                  <span className="tooltip">
-                    {calculatePercentage("Arvind Kejriwal")}%
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="skill-box">
-              <span className="title">None of the above</span>
-
-              <div className="skill-bar">
-                <span
-                  className="skill-per NOTA"
-                  style={getProgressBarStyles(
-                    calculatePercentage("None of the above")
-                  )}
-                >
-                  <span className="tooltip">
-                    {calculatePercentage("None of the above")}%
-                  </span>
-                </span>
-              </div>
-              <button className="back-btn" onClick={handleLogin}>Go Back To Login</button>
-            </div>
+            ))}
+            <button className="back-btn" onClick={handleLogin}>
+              Go Back To Login
+            </button>
           </div>
         </div>
       </div>
