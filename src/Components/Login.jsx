@@ -34,7 +34,7 @@ export default function Login() {
         showConfirmButton: false,
         timer: 1000,
       });
-      navigate("/VotingPage");
+      navigate("/Profile");
     } catch (err) {
       console.error("Error signing in:", err);
       Swal.fire({
@@ -55,7 +55,7 @@ export default function Login() {
       const userDetails = await signInWithPopup(auth, googleProvider);
       const user = userDetails.user;
       const token = await user.getIdToken();
-      setCookie("token", token, { path: "/" , maxAge:6000});
+      setCookie("token", token, { path: "/"});
       setUser(user);
       console.log(user);
 

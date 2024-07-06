@@ -3,12 +3,15 @@ import "./Profile.css";
 import { useUser } from "./UserContext";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "./Firebase/Firebase";
-import { format } from "date-fns"; // Importing date-fns for date formatting
+import { format } from "date-fns";
+import results from "../Assets/results.svg"
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { user } = useUser();
   const [userData, setUserData] = useState();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVoteData = async () => {
@@ -48,6 +51,11 @@ export default function Profile() {
     fetchVoteData();
   }, [user]);
 
+  const handleResults = () => {
+    console.log("object")
+    navigate("/Results");
+  };
+
   if (!user || loading) {
     return <div className="loader">Loading...</div>;
   }
@@ -81,6 +89,13 @@ export default function Profile() {
         <div className="vote-details">
           <p>You have voted for {userData.votedFor}</p>
           <p>On {format(userData.timestamp, "MMMM do, yyyy h:mm a")}</p>
+          <button className="btn" onClick={()=> handleResults()}>
+            <div className="result-img">
+            <img src={results} alt="" />
+            </div>
+
+            <span className="text">Show Results</span>
+          </button>
         </div>
       </div>
     </div>
